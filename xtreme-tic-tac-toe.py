@@ -8,7 +8,14 @@ def set_tile(row, col, sub_row, sub_col):
         if check_winner(row, col):
             label.config(text=f"{current_player} wins the sub-board!")
             disable_sub_board(row, col)
-            display_winner(row, col, current_player)  
+            display_winner(row, col, current_player)
+            
+            # Check for main game winner after a sub-board is won
+            if check_main_winner():
+                label.config(text=f"GAME OVER! {current_player} WINS THE GAME!")
+                disable_all_boards()
+                return
+                
         elif check_draw(row, col):
             label.config(text="Sub-board is a draw!")
             disable_sub_board(row, col)
@@ -70,7 +77,36 @@ def display_winner(row, col, winner):
             else:
                 button.grid_remove()  # Hide other buttons
 
+def check_main_winner():
+    # Check rows
+    for i in range(3):
+        if all(has_sub_board_winner(i, j, current_player) for j in range(3)):
+            return True
+    # Check columns
+    for j in range(3):
+        if all(has_sub_board_winner(i, j, current_player) for i in range(3)):
+            return True
+    # Check diagonals
+    if all(has_sub_board_winner(i, i, current_player) for i in range(3)):
+        return True
+    if all(has_sub_board_winner(i, 2-i, current_player) for i in range(3)):
+        return True
+    return False
 
+def has_sub_board_winner(row, col, player):
+    frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
+    # Check if the center button (where we display the winner) has the player's symbol
+    center_button = frame.grid_slaves(row=1, column=1)[0]
+    return center_button["text"] == player
+
+# Add this new function to disable all boards when game is won
+def disable_all_boards():
+    for row in range(3):
+        for col in range(3):
+            frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
+            for button in frame.winfo_children():
+                if isinstance(button, tk.Button):
+                    button.config(state="disabled")
 
 
 player_x = "X"
