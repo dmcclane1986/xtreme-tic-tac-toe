@@ -3,16 +3,16 @@ import tkinter as tk
 def set_tile(row, col, sub_row, sub_col):
     global current_player, next_sub_board_row, next_sub_board_col
 
-    # Check if this move is allowed based on the next_sub_board
+   
     if (next_sub_board_row is not None and next_sub_board_col is not None and 
         (row != next_sub_board_row or col != next_sub_board_col)):
-        return  # Invalid move, do nothing
+        return  
 
     button = ultimate_frame.grid_slaves(row=row+1, column=col)[0].grid_slaves(row=sub_row, column=sub_col)[0]
     if button["text"] == "":
         button["text"] = current_player
         
-        # First handle if current move creates a win or draw
+        
         if check_winner(row, col):
             label.config(text=f"{current_player} wins the sub-board!")
             disable_sub_board(row, col)
@@ -22,20 +22,20 @@ def set_tile(row, col, sub_row, sub_col):
                 label.config(text=f"GAME OVER! {current_player} WINS THE GAME!")
                 disable_all_boards()
                 return
-            elif check_main_draw():  # Check for main board draw
+            elif check_main_draw():  
                 label.config(text="GAME OVER! IT'S A TIE!")
                 disable_all_boards()
                 return
         elif check_draw(row, col):
             label.config(text="Sub-board is a draw!")
             disable_sub_board(row, col)
-            display_winner(row, col, "T")  # Display 'T' for Tie
-            if check_main_draw():  # Also check here
+            display_winner(row, col, "T")  
+            if check_main_draw():  
                 label.config(text="GAME OVER! IT'S A TIE!")
                 disable_all_boards()
                 return
         
-        # Then determine next valid move location
+        
         if is_sub_board_complete(sub_row, sub_col):
             next_sub_board_row = None
             next_sub_board_col = None
@@ -43,13 +43,13 @@ def set_tile(row, col, sub_row, sub_col):
             next_sub_board_row = sub_row
             next_sub_board_col = sub_col
         
-        # Finally switch players and update display
+        
         current_player = player_o if current_player == player_x else player_x
         update_turn_label()
 
 def check_main_draw():
     """Check if all sub-boards are complete and there's no winner"""
-    # Check if all sub-boards are complete
+   
     all_complete = all(is_sub_board_complete(row, col) 
                       for row in range(3) 
                       for col in range(3))
@@ -99,29 +99,29 @@ def reset_game():
                     button.grid(row=sub_row, column=sub_col, padx=2, pady=2)
 
 def display_winner(row, col, winner):
-    # Get the frame of the sub-board
+    
     frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
     
-    # Hide all buttons except the center one
+    
     for sub_row in range(3):
         for sub_col in range(3):
             button = frame.grid_slaves(row=sub_row, column=sub_col)[0]
-            if sub_row == 1 and sub_col == 1:  # Center button
+            if sub_row == 1 and sub_col == 1:  
                 button.config(text=winner, font=("Arial", 60), width=3, height=2, disabledforeground="red")
 
             else:
-                button.grid_remove()  # Hide other buttons
+                button.grid_remove()  
 
 def check_main_winner():
-    # Check rows
+    
     for i in range(3):
         if all(has_sub_board_winner(i, j, current_player) for j in range(3)):
             return True
-    # Check columns
+    
     for j in range(3):
         if all(has_sub_board_winner(i, j, current_player) for i in range(3)):
             return True
-    # Check diagonals
+    
     if all(has_sub_board_winner(i, i, current_player) for i in range(3)):
         return True
     if all(has_sub_board_winner(i, 2-i, current_player) for i in range(3)):
@@ -133,7 +133,7 @@ def has_sub_board_winner(row, col, player):
         return False
     
     frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
-    # Check if the center button (where we display the winner) has the player's symbol
+    
     center_button = frame.grid_slaves(row=1, column=1)[0]
     return center_button["text"] == player
 
@@ -153,11 +153,11 @@ def is_sub_board_complete(row, col):
     frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
     center_button = frame.grid_slaves(row=1, column=1)[0]
     
-    # Check if board is won
+    
     if center_button.cget('background') == ("black"):
         return True
         
-    # Check if board is drawn (all spaces filled)
+    
     buttons = [widget for widget in frame.winfo_children() if isinstance(widget, tk.Button)]
     return all(button["text"] != "" for button in buttons)
 
@@ -174,7 +174,7 @@ def reset_board_colors():
             frame.configure(bg="darkgray")
 
 
-def update_turn_label():
+def update_turn_label():# Add these global variables after player_x, player_o, current_player declarations
     """Update the turn label and highlight active board"""
     reset_board_colors()  # Reset all boards first
     if next_sub_board_row is not None and next_sub_board_col is not None:
@@ -186,13 +186,14 @@ def update_turn_label():
 
 
 
+
 player_x = "X"
 player_o = "O"
 current_player = player_x
 
-# Add these global variables after player_x, player_o, current_player declarations
-next_sub_board_row = None  # Track next valid row
-next_sub_board_col = None  # Track next valid column
+
+next_sub_board_row = None  
+next_sub_board_col = None  
 
 
 
