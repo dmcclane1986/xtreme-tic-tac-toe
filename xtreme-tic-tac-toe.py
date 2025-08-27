@@ -22,9 +22,18 @@ def set_tile(row, col, sub_row, sub_col):
                 label.config(text=f"GAME OVER! {current_player} WINS THE GAME!")
                 disable_all_boards()
                 return
+            elif check_main_draw():  # Check for main board draw
+                label.config(text="GAME OVER! IT'S A TIE!")
+                disable_all_boards()
+                return
         elif check_draw(row, col):
             label.config(text="Sub-board is a draw!")
             disable_sub_board(row, col)
+            display_winner(row, col, "T")  # Display 'T' for Tie
+            if check_main_draw():  # Also check here
+                label.config(text="GAME OVER! IT'S A TIE!")
+                disable_all_boards()
+                return
         
         # Then determine next valid move location
         if is_sub_board_complete(sub_row, sub_col):
@@ -37,6 +46,14 @@ def set_tile(row, col, sub_row, sub_col):
         # Finally switch players and update display
         current_player = player_o if current_player == player_x else player_x
         update_turn_label()
+
+def check_main_draw():
+    """Check if all sub-boards are complete and there's no winner"""
+    # Check if all sub-boards are complete
+    all_complete = all(is_sub_board_complete(row, col) 
+                      for row in range(3) 
+                      for col in range(3))
+    return all_complete and not check_main_winner()
 
 def check_winner(row, col):
     frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
