@@ -15,10 +15,15 @@ def set_tile(row, col, sub_row, sub_col):
                 label.config(text=f"GAME OVER! {current_player} WINS THE GAME!")
                 disable_all_boards()
                 return
-                
+            current_player = player_o if current_player == player_x else player_x
+            label.config(text=f"{current_player}'s Turn")
+
         elif check_draw(row, col):
             label.config(text="Sub-board is a draw!")
             disable_sub_board(row, col)
+
+            current_player = player_o if current_player == player_x else player_x
+            label.config(text=f"{current_player}'s Turn")
         else:
             current_player = player_o if current_player == player_x else player_x
             label.config(text=f"{current_player}'s Turn")
