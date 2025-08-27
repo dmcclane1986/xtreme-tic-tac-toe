@@ -1,32 +1,42 @@
 import tkinter as tk
 
 def set_tile(row, col, sub_row, sub_col):
-    global current_player
+    global current_player, next_sub_board_row, next_sub_board_col
+
+    # Check if this move is allowed based on the next_sub_board
+    if (next_sub_board_row is not None and next_sub_board_col is not None and 
+        (row != next_sub_board_row or col != next_sub_board_col)):
+        return  # Invalid move, do nothing
+
     button = ultimate_frame.grid_slaves(row=row+1, column=col)[0].grid_slaves(row=sub_row, column=sub_col)[0]
     if button["text"] == "":
         button["text"] = current_player
+        
+        # First handle if current move creates a win or draw
         if check_winner(row, col):
             label.config(text=f"{current_player} wins the sub-board!")
             disable_sub_board(row, col)
             display_winner(row, col, current_player)
             
-            # Check for main game winner after a sub-board is won
             if check_main_winner():
                 label.config(text=f"GAME OVER! {current_player} WINS THE GAME!")
                 disable_all_boards()
                 return
-            current_player = player_o if current_player == player_x else player_x
-            label.config(text=f"{current_player}'s Turn")
-
         elif check_draw(row, col):
             label.config(text="Sub-board is a draw!")
             disable_sub_board(row, col)
-
-            current_player = player_o if current_player == player_x else player_x
-            label.config(text=f"{current_player}'s Turn")
+        
+        # Then determine next valid move location
+        if is_sub_board_complete(sub_row, sub_col):
+            next_sub_board_row = None
+            next_sub_board_col = None
         else:
-            current_player = player_o if current_player == player_x else player_x
-            label.config(text=f"{current_player}'s Turn")
+            next_sub_board_row = sub_row
+            next_sub_board_col = sub_col
+        
+        # Finally switch players and update display
+        current_player = player_o if current_player == player_x else player_x
+        update_turn_label()
 
 def check_winner(row, col):
     frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
@@ -53,9 +63,12 @@ def disable_sub_board(row, col):
             button.config(background="black", state="disabled")
 
 def reset_game():
-    global current_player
+    global current_player, next_sub_board_row, next_sub_board_col
     current_player = player_x
-    label.config(text=f"{current_player}'s Turn")
+    next_sub_board_row = None
+    next_sub_board_col = None
+    reset_board_colors()
+    update_turn_label()
     for row in range(3):
         for col in range(3):
             frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
@@ -99,13 +112,17 @@ def check_main_winner():
     return False
 
 def has_sub_board_winner(row, col, player):
+    if not is_sub_board_complete(row, col):
+        return False
+    
     frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
     # Check if the center button (where we display the winner) has the player's symbol
     center_button = frame.grid_slaves(row=1, column=1)[0]
     return center_button["text"] == player
 
-# Add this new function to disable all boards when game is won
+
 def disable_all_boards():
+    reset_board_colors()
     for row in range(3):
         for col in range(3):
             frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
@@ -114,9 +131,54 @@ def disable_all_boards():
                     button.config(state="disabled")
 
 
+def is_sub_board_complete(row, col):
+    """Check if a sub-board is won or drawn"""
+    frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
+    center_button = frame.grid_slaves(row=1, column=1)[0]
+    
+    # Check if board is won
+    if center_button.cget('background') == ("black"):
+        return True
+        
+    # Check if board is drawn (all spaces filled)
+    buttons = [widget for widget in frame.winfo_children() if isinstance(widget, tk.Button)]
+    return all(button["text"] != "" for button in buttons)
+
+def highlight_active_board(row, col):
+    """Highlight the active board in yellow"""
+    frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
+    frame.configure(bg="yellow")
+
+def reset_board_colors():
+    """Reset all board backgrounds to darkgray"""
+    for row in range(3):
+        for col in range(3):
+            frame = ultimate_frame.grid_slaves(row=row+1, column=col)[0]
+            frame.configure(bg="darkgray")
+
+
+def update_turn_label():
+    """Update the turn label and highlight active board"""
+    reset_board_colors()  # Reset all boards first
+    if next_sub_board_row is not None and next_sub_board_col is not None:
+        label.config(text=f"{current_player}'s Turn - Must play in board ({next_sub_board_row+1}, {next_sub_board_col+1})")
+        highlight_active_board(next_sub_board_row, next_sub_board_col)
+    else:
+        label.config(text=f"{current_player}'s Turn - Free Choice")
+
+
+
+
 player_x = "X"
 player_o = "O"
 current_player = player_x
+
+# Add these global variables after player_x, player_o, current_player declarations
+next_sub_board_row = None  # Track next valid row
+next_sub_board_col = None  # Track next valid column
+
+
+
 
 game_board = tk.Tk()
 game_board.title("Xtreme Tic Tac Toe")
